@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLive Virtual Chat - Index page</title>
+    <style>
+      body { background-color: black; color: white; font-size: 42px; padding: 40px; }
+      .question { font-size: 56px; text-align: center; }
+      .answer { display: grid; grid-template-columns: 1fr; margin: 80px auto; width: max-content; gap: 48px; }
+      .answer > a { padding: 18px; border-style: solid; border-color: white; border-width: 1px; background-color: #1f1f1f; cursor: pointer; text-decoration: none; color: white; }
+      .answer > a:hover {
+        background-color: #3f3f3f;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="question">好吧，告诉我，你的选择是？</div>
+      <div class="answer">
+        <a href="stable/">我需要万事俱备：去稳定版</a>
+        <a href="beta/">我想要最新功能：去测试版</a>
+      </div>
+    </main>
+  </body>
+</html>
