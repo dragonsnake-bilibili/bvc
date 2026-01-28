@@ -1,0 +1,1 @@
+function t(n){return Math.sin(n*Math.PI/2)}function e(n){return 1-Math.pow(1-n,3)}function u(n){return n<.5?2*n*n:1-Math.pow(-2*n+2,2)/2}const o={ease_out_sine:t,ease_out_cubic:e,ease_in_out_quad:u};export{o as e};

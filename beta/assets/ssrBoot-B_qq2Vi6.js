@@ -1,0 +1,1 @@
+import{o as t,s,I as e,t as n}from"./pinia-CYavoQC1.js";function i(){const o=s(!1);return t(()=>{window.requestAnimationFrame(()=>{o.value=!0})}),{ssrBootStyles:n(()=>o.value?void 0:{transition:"none !important"}),isBooted:e(o)}}export{i as u};

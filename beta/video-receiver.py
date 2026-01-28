@@ -4,33 +4,17 @@ from argparse import ArgumentParser
 from collections.abc import Callable
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from importlib.util import find_spec
-from io import BytesIO
 from json import dumps, loads
 from pathlib import Path
 from shutil import which
-from subprocess import DEVNULL, PIPE, Popen, run
-from sys import executable, orig_argv
+from subprocess import DEVNULL, PIPE, Popen
 from sys import exit as exit_program
 from tempfile import NamedTemporaryFile
 from threading import Event, Thread
 from types import FrameType
 
-if find_spec("PIL.Image") is None:
-  print("服务器需要 Pillow，一个广为使用的图像处理库，来处理图片，但你的设备上并未安装")  # noqa: RUF001, T201
-  response = input("是否进行安装？这将通过 pip install pillow 完成 [y/N]: ")  # noqa: RUF001
-  if response.lower() == "y":
-    python = executable or which(orig_argv[0])
-    if python is None:
-      print("无法找到可运行的 Python 解释器，这很诡异，只好放弃")  # noqa: RUF001, T201
-      exit_program()
-    command_line = [python, "-m", "pip", "install", "pillow"]
-    print(f"正在运行 {command_line}")  # noqa: T201
-    run(command_line, check=True)  # noqa: S603
-  else:
-    exit_program()
-
-from PIL import Image
+_INTERFACE_VERSION = None
+_PORTS = [26282, 42523, 54266, 29095, 42503, 55729, 50431, 56421, 41246, 16171]
 
 
 class _VideoEncoder:
@@ -79,10 +63,10 @@ class _VideoEncoder:
   def __del__(self) -> None:
     self.finalize()
 
-  def place_image(self, image: Image.Image) -> None:
+  def place_image(self, image: bytes) -> None:
     if self._encoder is None or self._encoder.stdin is None:
       return
-    self._encoder.stdin.write(image.tobytes())
+    self._encoder.stdin.write(image)
 
 
 class _Server(HTTPServer):
@@ -112,9 +96,11 @@ class _Handler(BaseHTTPRequestHandler):
       return
 
     if method == "ping":
-      self.send_response(HTTPStatus.NO_CONTENT)
+      self.send_response(HTTPStatus.OK)
       self.send_header("Access-Control-Allow-Origin", "*")
+      self.send_header("Content-Type", "application/json")
       self.end_headers()
+      self.wfile.write(dumps({"interface": _INTERFACE_VERSION or -1}).encode())
       return
 
     if self.server.encoder is not None:
@@ -162,13 +148,11 @@ class _Handler(BaseHTTPRequestHandler):
 
     if content_type == "application/json":
       self._handle_meta(loads(payload))
-    elif content_type.startswith("image/"):
+    elif content_type == "application/octet-stream":
       if self.server.encoder is None:
         self.send_error(HTTPStatus.BAD_REQUEST)
         return
-      buffer = BytesIO(payload)
-      image = Image.open(buffer)
-      self.server.encoder.place_image(image)
+      self.server.encoder.place_image(payload)
       self.send_response(HTTPStatus.NO_CONTENT)
       self.send_header("Access-Control-Allow-Origin", "*")
       self.end_headers()
@@ -194,11 +178,21 @@ def _main() -> None:
       "程序需要 FFmpeg 进行视频编码，请确认是否已安装并加入 PATH 环境变量。也可以通过命令行参数指定其位置",  # noqa: RUF001
     )
     exit_program()
-  server = _Server(
-    server_address=("localhost", arguments.port),
-    RequestHandlerClass=_Handler,
-    ffmpeg_path=ffmpeg_binary,
-  )
+
+  server = None
+  for port in _PORTS:
+    try:
+      server = _Server(
+        server_address=("localhost", port),
+        RequestHandlerClass=_Handler,
+        ffmpeg_path=ffmpeg_binary,
+      )
+      break
+    except OSError:
+      server = None
+  if server is None:
+    print("程序无法找到可用端口")  # noqa: T201
+    exit_program()
   server_thread = Thread(target=server.serve_forever)
   waiter = Event()
 
