@@ -1,0 +1,1 @@
+import{D as a,b as i}from"./pinia-CYavoQC1.js";const r=a("dialog",()=>{const t=i({show:!1,type:"success",title:"",content:""});function e(o,s,n){t.type=o,t.title=s,t.content=n??"",t.show=!0}return{state:t,show_dialog:e}});export{r as u};
