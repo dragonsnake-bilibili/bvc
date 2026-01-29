@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile
 from threading import Event, Thread
 from types import FrameType
 
-_INTERFACE_VERSION = None
+_INTERFACE_VERSION = 1
 _PORTS = [26282, 42523, 54266, 29095, 42503, 55729, 50431, 56421, 41246, 16171]
 
 
